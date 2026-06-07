@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishShield AI - Real-Time Phishing Protection System</title>
+    <meta name="description" content="AI-Powered Real-Time Phishing Detection and Protection System using Machine Learning.">
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for beautiful analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- REAL-TIME INTERACTION WARNING OVERLAY      -->
+    <!-- ========================================== -->
+    <div id="security-warning-overlay" class="warning-overlay hidden">
+        <div class="warning-card">
+            <div class="warning-header">
+                <div class="warning-icon-wrapper">
+                    <i class="fa-solid fa-triangle-exclamation warning-icon"></i>
+                </div>
+                <h2>⚠ SECURITY WARNING</h2>
+            </div>
+            
+            <div class="warning-body">
+                <div class="threat-gauge-wrapper">
+                    <div class="threat-ring" id="warning-risk-ring">
+                        <span id="warning-risk-score">92%</span>
+                    </div>
+                </div>
+                
+                <div class="threat-meta">
+                    <div class="threat-status red" id="warning-classification">PHISHING</div>
+                    <div class="threat-target-label">Scanned Indicator:</div>
+                    <div class="threat-target-val" id="warning-target">https://paypal-security-login.com</div>
+                </div>
+                
+                <div class="threat-reasons-container">
+                    <h3>AI Heuristic Analysis Summary:</h3>
+                    <ul id="warning-reasons-list">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="warning-footer">
+                <button class="btn btn-secondary" id="warning-btn-back"><i class="fa-solid fa-arrow-left"></i> Go Back (Safe)</button>
+                <button class="btn btn-danger-outline" id="warning-btn-proceed">Proceed Anyway (Risk) <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- AUTHENTICATION PANELS                      -->
+    <!-- ========================================== -->
+    <div id="auth-container" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h1>PhishShield <span>AI</span></h1>
+                <p>Cybersecurity & Machine Learning Assistant</p>
+            </div>
+            
+            <!-- Login View -->
+            <div id="login-view" class="auth-view">
+                <h2>Access System</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="login-username" placeholder="Enter username" required autocomplete="username">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-login-submit">
+                        Verify Credentials & Sign In
+                    </button>
+                </form>
+                <p class="auth-switch">Don't have an account? <span id="switch-to-register">Register here</span></p>
+            </div>
+            
+            <!-- Register View -->
+            <div id="register-view" class="auth-view hidden">
+                <h2>Create Account</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="register-username" placeholder="Choose a username" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="register-password" placeholder="Create secure password (min 6 chars)" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-role">System Role</label>
+                        <div class="input-icon-wrapper">
+                            <i class="fa-solid fa-user-gear"></i>
+                            <select id="register-role">
+                                <option value="user">Standard Security User</option>
+                                <option value="admin">System Administrator</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="btn-register-submit">
+                        Initialize Profile & Register
+                    </button>
+                </form>
+                <p class="auth-switch">Already registered? <span id="switch-to-login">Login here</span></p>
+            </div>
+            <div id="auth-error-msg" class="alert alert-danger hidden"></div>
+            <div id="auth-success-msg" class="alert alert-success hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MAIN INTERACTIVE APP LAYOUT               -->
+    <!-- ========================================== -->
+    <div id="app-container" class="app-layout hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h2>PhishShield <span>AI</span></h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-line"></i> Security Dashboard
+                </a>
+                <a href="#url-scanner" class="nav-item" id="nav-url-scanner">
+                    <i class="fa-solid fa-globe"></i> URL Scanner
+                </a>
+                <a href="#email-scanner" class="nav-item" id="nav-email-scanner">
+                    <i class="fa-solid fa-envelope-open-text"></i> Email Scanner
+                </a>
+                <a href="#qr-scanner" class="nav-item" id="nav-qr-scanner">
+                    <i class="fa-solid fa-qrcode"></i> QR Phishing Scanner
+                </a>
+                <a href="#domain-info" class="nav-item" id="nav-domain-info">
+                    <i class="fa-solid fa-circle-info"></i> Domain WHOIS
+                </a>
+                <a href="#link-protection" class="nav-item" id="nav-link-protection">
+                    <i class="fa-solid fa-lock"></i> Link Protection Sandbox
+                </a>
+                <a href="#history" class="nav-item" id="nav-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Threat Log History
+                </a>
+                <a href="#admin-panel" class="nav-item admin-only hidden" id="nav-admin-panel">
+                    <i class="fa-solid fa-sliders"></i> System Admin Panel
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <i class="fa-solid fa-user-circle"></i>
+                    <div class="user-details">
+                        <span id="sidebar-username">User</span>
+                        <span id="sidebar-role" class="role-tag">User</span>
+                    </div>
+                </div>
+                <button class="btn btn-logout" id="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Window Container -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="header-bar">
+                <h1 id="page-title">Security Dashboard</h1>
+                <div class="header-status">
+                    <!-- Real-Time Link Shield Switch -->
+                    <div class="toggle-container">
+                        <span class="toggle-label"><i class="fa-solid fa-clipboard-check text-sky"></i> Clipboard Link Monitor</span>
+                        <label class="switch">
+                            <input type="checkbox" id="clipboard-monitor-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <span id="connection-indicator"><i class="fa-solid fa-circle text-emerald"></i> Server Connected</span>
+                </div>
+            </header>
+
+            <!-- Page Views -->
+            <div class="page-viewport">
+
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="view-dashboard" class="page-view">
+                    <!-- Metrics Cards Grid -->
+                    <div class="metrics-grid">
+                        <div class="card metric-card">
+                            <div class="metric-icon bg-sky-glow"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <div class="metric-content">
+                                <span class="metric-label">Total Indicators Audited</span>
+                                <h3 id="stat-total-scans">0</h3>
+                            </div>
+                        </div>
+                        <div class="card metric-card">
+                            <div class="metric-icon bg-emerald-glow"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="metric-content">
+                                <span class="metric-label">Safe Domains Logged</span>
+                                <h3 id="stat-safe-scans">0</h3>
+                            </div>
+                        </div>
+                        <div class="card metric-card">
+                            <div class="metric-icon bg-rose-glow"><i class="fa-solid fa-bug"></i></div>
+                            <div class="metric-content">
+                                <span class="metric-label">Phishing Threats Detected</span>
+                                <h3 id="stat-phish-scans">0</h3>
+                            </div>
+                        </div>
+                        <div class="card metric-card">
+                            <div class="metric-icon bg-amber-glow"><i class="fa-solid fa-percent"></i></div>
+                            <div class="metric-content">
+                                <span class="metric-label">Model Detection Accuracy</span>
+                                <h3 id="stat-detection-rate">0%</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="charts-grid">
+                        <div class="card chart-card">
+                            <h3>Scans by Category</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-type-distribution"></canvas>
+                            </div>
+                        </div>
+                        <div class="card chart-card">
+                            <h3>Threat Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-class-distribution"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Section -->
+                    <div class="card table-card">
+                        <h3>Recent Threat Activity</h3>
+                        <div class="table-scroll-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Indicators Checked</th>
+                                        <th>Classification</th>
+                                        <th>Risk Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-recent-tbody">
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No scan history recorded. Run a scanner to begin!</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. URL SCANNER VIEW -->
+                <section id="view-url-scanner" class="page-view hidden">
+                    <div class="card form-card">
+                        <h2>Inspect Web Address</h2>
+                        <p>Analyze links and URL parameters in real time using the Random Forest classifier.</p>
+                        <form id="url-scan-form" class="scan-form">
+                            <div class="scan-input-group">
+                                <i class="fa-solid fa-globe input-prefix-icon"></i>
+                                <input type="text" id="url-scan-input" placeholder="Enter URL (e.g. https://paypal-security-login.com)" required>
+                                <button type="submit" class="btn btn-primary" id="btn-run-url-scan">
+                                    Run Machine Learning Scan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Scan Results Panel -->
+                    <div id="url-results-card" class="card result-card hidden">
+                        <div class="result-header">
+                            <h3>Scan Assessment Results</h3>
+                            <span class="classification-badge" id="url-class-badge">SAFE</span>
+                        </div>
+                        
+                        <div class="result-body">
+                            <div class="gauge-container">
+                                <div class="risk-meter" id="url-risk-meter">
+                                    <div class="risk-meter-fill" id="url-risk-fill"></div>
+                                    <span id="url-risk-percent">0%</span>
+                                    <span class="risk-meter-label">Phishing Risk</span>
+                                </div>
+                            </div>
+                            
+                            <div class="details-container">
+                                <h4>Explainable AI (XAI) Assessment Factors</h4>
+                                <p class="text-muted" id="url-explanation-lead">Characteristics extracted and compared against known malicious domain topologies.</p>
+                                <ul class="reasons-list" id="url-reasons-list">
+                                    <!-- Filled dynamically -->
+                                </ul>
+                                
+                                <div class="features-collapsible">
+                                    <button class="btn btn-secondary btn-sm" id="btn-toggle-raw-features">
+                                        <i class="fa-solid fa-brackets-curly"></i> View Raw Feature Matrix
+                                    </button>
+                                    <div id="raw-features-panel" class="raw-features-json hidden">
+                                        <pre><code id="url-features-code">{}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="result-actions">
+                            <button class="btn btn-sky-outline" id="btn-download-url-report">
+                                <i class="fa-solid fa-file-pdf"></i> Download Audit Report
+                            </button>
+                            
+                            <!-- Override Block (Admin/User Custom Training override) -->
+                            <div class="override-panel admin-only hidden">
+                                <span class="override-label"><i class="fa-solid fa-user-shield"></i> Classification Incorrect? Override:</span>
+                                <button class="btn btn-danger-outline btn-sm" id="btn-override-phish">Flag as Phishing</button>
+                                <button class="btn btn-emerald-outline btn-sm" id="btn-override-safe">Flag as Legitimate</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. EMAIL SCANNER VIEW -->
+                <section id="view-email-scanner" class="page-view hidden">
+                    <div class="card form-card">
+                        <h2>Email Phishing Detector</h2>
+                        <p>Paste email headers and body text to identify urgent phrasing, attachment triggers, and credential requests.</p>
+                        <form id="email-scan-form">
+                            <div class="form-group">
+                                <textarea id="email-scan-input" rows="8" placeholder="Paste full email text here (e.g. 'Dear Customer, we noticed suspicious login activity... please click here immediately to restore access')" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btn-run-email-scan">
+                                Analyze Email Body Heuristics
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Email Scan Results -->
+                    <div id="email-results-card" class="card result-card hidden">
+                        <div class="result-header">
+                            <h3>Email Heuristic Scan Results</h3>
+                            <span class="classification-badge" id="email-class-badge">SAFE</span>
+                        </div>
+                        
+                        <div class="result-body">
+                            <div class="gauge-container">
+                                <div class="risk-meter" id="email-risk-meter">
+                                    <div class="risk-meter-fill" id="email-risk-fill"></div>
+                                    <span id="email-risk-percent">0%</span>
+                                    <span class="risk-meter-label">Phishing Risk</span>
+                                </div>
+                            </div>
+                            
+                            <div class="details-container">
+                                <h4>Heuristics Highlight Indicators</h4>
+                                <ul class="reasons-list" id="email-reasons-list">
+                                    <!-- Filled dynamically -->
+                                </ul>
+                                
+                                <div id="email-links-extracted-panel" class="extracted-links-panel hidden">
+                                    <h4>Extracted Links Found in Body:</h4>
+                                    <div class="links-list" id="email-links-list">
+                                        <!-- Filled dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="result-actions">
+                            <button class="btn btn-sky-outline" id="btn-download-email-report">
+                                <i class="fa-solid fa-file-pdf"></i> Download Email Audit Report
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. QR SCANNER VIEW -->
+                <section id="view-qr-scanner" class="page-view hidden">
+                    <div class="card form-card">
+                        <h2>Malicious QR Code (Quishing) Scanner</h2>
+                        <p>Select a QR code image file or activate your webcam to extract embedded web addresses and scan them using PhishShield AI.</p>
+                        
+                        <div class="qr-modes">
+                            <div class="qr-mode-card" id="qr-mode-upload">
+                                <i class="fa-solid fa-image qr-mode-icon"></i>
+                                <h3>Upload QR Code Image</h3>
+                                <p>Load PNG or JPG containing a QR code.</p>
+                                <input type="file" id="qr-file-input" accept="image/*" class="hidden">
+                                <button class="btn btn-secondary" onclick="document.getElementById('qr-file-input').click()">Choose File</button>
+                            </div>
+                            
+                            <div class="qr-mode-card" id="qr-mode-camera">
+                                <i class="fa-solid fa-camera qr-mode-icon"></i>
+                                <h3>Webcam Scan</h3>
+                                <p>Hold QR code up to your camera in real time.</p>
+                                <button class="btn btn-secondary" id="btn-toggle-webcam">Start Camera</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Webcam Feed Modal / Frame -->
+                        <div id="webcam-container" class="webcam-panel hidden">
+                            <div class="video-wrapper">
+                                <video id="qr-video" width="400" height="300" autoplay playsinline></video>
+                                <canvas id="qr-canvas" class="hidden"></canvas>
+                                <div class="camera-overlay-box"></div>
+                            </div>
+                            <button class="btn btn-danger-outline btn-sm" id="btn-stop-webcam">Cancel Webcam Feed</button>
+                        </div>
+                    </div>
+
+                    <!-- QR Results Panel -->
+                    <div id="qr-results-card" class="card result-card hidden">
+                        <div class="result-header">
+                            <h3>Extracted QR Link Analysis</h3>
+                            <span class="classification-badge" id="qr-class-badge">SAFE</span>
+                        </div>
+                        
+                        <div class="result-body">
+                            <div class="gauge-container">
+                                <div class="risk-meter" id="qr-risk-meter">
+                                    <div class="risk-meter-fill" id="qr-risk-fill"></div>
+                                    <span id="qr-risk-percent">0%</span>
+                                    <span class="risk-meter-label">Phishing Risk</span>
+                                </div>
+                            </div>
+                            
+                            <div class="details-container">
+                                <div class="qr-extracted-link-card">
+                                    <span class="link-title"><i class="fa-solid fa-link"></i> Decoded URL:</span>
+                                    <span class="link-url-value" id="qr-decoded-url">https://loading...</span>
+                                </div>
+                                <h4 style="margin-top: 15px;">Explainable AI Analysis Indicators</h4>
+                                <ul class="reasons-list" id="qr-reasons-list">
+                                    <!-- Filled dynamically -->
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="result-actions">
+                            <button class="btn btn-sky-outline" id="btn-download-qr-report">
+                                <i class="fa-solid fa-file-pdf"></i> Download QR Audit Report
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. DOMAIN WHOIS VIEW -->
+                <section id="view-domain-info" class="page-view hidden">
+                    <div class="card form-card">
+                        <h2>Technical Domain Registry Audit</h2>
+                        <p>Query registration metadata (WHOIS details) directly from standard RDAP nodes to evaluate website authenticity.</p>
+                        <form id="domain-scan-form" class="scan-form">
+                            <div class="scan-input-group">
+                                <i class="fa-solid fa-server input-prefix-icon"></i>
+                                <input type="text" id="domain-scan-input" placeholder="Enter Domain Name (e.g. Chase.com or paypal-update.com)" required>
+                                <button type="submit" class="btn btn-primary" id="btn-run-domain-lookup">
+                                    Fetch Registry Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Registry Results Table -->
+                    <div id="domain-results-card" class="card table-card hidden">
+                        <h3>Registration Metadata Details</h3>
+                        <table class="data-table">
+                            <tbody>
+                                <tr>
+                                    <td><b>Domain Audited</b></td>
+                                    <td id="domain-info-name">-</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Assigned Registrar</b></td>
+                                    <td id="domain-info-registrar">-</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Domain Creation Date</b></td>
+                                    <td id="domain-info-creation">-</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Domain Expiration Date</b></td>
+                                    <td id="domain-info-expiration">-</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Registrar Registry Country</b></td>
+                                    <td id="domain-info-country">-</td>
+                                </tr>
+                                <tr>
+                                    <td><b>HTTPS Protocol SSL Status</b></td>
+                                    <td id="domain-info-https">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 6. LINK PROTECTION SANDBOX VIEW -->
+                <section id="view-link-protection" class="page-view hidden">
+                    <div class="card form-card">
+                        <h2>Link Interception Sandbox Simulator</h2>
+                        <p>PhishShield AI intercepts suspicious link clicks in real time. Experience how PhishShield intercepts clicks below:</p>
+                        
+                        <div class="sandbox-grid">
+                            <div class="sandbox-app-mock">
+                                <div class="mock-app-header">
+                                    <i class="fa-solid fa-comments"></i> Chat Simulator (Message Client)
+                                </div>
+                                <div class="mock-app-body">
+                                    <div class="message received">
+                                        <div class="sender">Support Agent</div>
+                                        <p>Hello! We noticed a login attempt from a new device. If this wasn't you, verify your login details immediately:</p>
+                                        <!-- Malicious Link -->
+                                        <a href="http://paypal-security-login.com" class="sandbox-link warning-trigger" data-target-url="http://paypal-security-login.com">
+                                            http://paypal-security-login.com
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="message received">
+                                        <div class="sender">Amazon Verification</div>
+                                        <p>Dear Amazon Shopper, your order #902-1209 has been suspended. Please confirm billing info here:</p>
+                                        <!-- Malicious Link -->
+                                        <a href="http://verify-amazon-account-support.com" class="sandbox-link warning-trigger" data-target-url="http://verify-amazon-account-support.com">
+                                            http://verify-amazon-account-support.com
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="message received">
+                                        <div class="sender">Wikipedia Admin</div>
+                                        <p>Hi, thanks for the contribution. Check out this Wikipedia article about phishing for details:</p>
+                                        <!-- Safe Link -->
+                                        <a href="https://wikipedia.org" class="sandbox-link warning-trigger" data-target-url="https://wikipedia.org">
+                                            https://wikipedia.org
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="sandbox-explainer">
+                                <h3>How Clipboard Shield Works:</h3>
+                                <p>1. Toggle <b>Clipboard Link Monitor</b> in the top header bar to active.</p>
+                                <p>2. Copy any web link from outside the browser (e.g. from notepad, MS Word, or another window).</p>
+                                <p>3. PhishShield AI's background thread immediately captures the clipboard copy event, runs the Random Forest ML scan, and launches the Warning popup in real time!</p>
+                                <div class="clipboard-test-area">
+                                    <h4>Test URLs (Click to copy to clipboard):</h4>
+                                    <div class="copy-pill warning-trigger" data-copy-url="https://netflix-billing-update-alert.com">
+                                        Copy Phishing: netflix-billing-update-alert.com
+                                    </div>
+                                    <div class="copy-pill warning-trigger" data-copy-url="https://google.com">
+                                        Copy Safe: google.com
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. THREAT LOG HISTORY VIEW -->
+                <section id="view-history" class="page-view hidden">
+                    <div class="card table-card">
+                        <div class="card-header-flex">
+                            <h2>Threat Log History</h2>
+                            <div class="table-search-group">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="history-search" placeholder="Search target or classification...">
+                            </div>
+                        </div>
+                        
+                        <div class="table-scroll-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date Checked</th>
+                                        <th>Audited Target</th>
+                                        <th>Scan Type</th>
+                                        <th>Classification</th>
+                                        <th>Risk Score</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-tbody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. SYSTEM ADMIN PANEL VIEW -->
+                <section id="view-admin-panel" class="page-view hidden">
+                    <div class="admin-grid">
+                        
+                        <!-- AI Retraining Panel -->
+                        <div class="card form-card">
+                            <h2>AI Model Retraining Pipeline</h2>
+                            <p>Trigger Random Forest retraining using the updated dataset including custom user overrides to improve accuracy.</p>
+                            
+                            <div class="retrain-metrics">
+                                <div class="metric-mini">
+                                    <span class="label">Total System Datapoints:</span>
+                                    <span class="value" id="admin-dataset-count">0</span>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-primary btn-block" id="btn-trigger-retrain">
+                                Run RandomForest Retraining Pipeline
+                            </button>
+                            
+                            <div id="retrain-success" class="alert alert-success hidden" style="margin-top: 10px;"></div>
+                        </div>
+
+                        <!-- Manual Domain Override Panel -->
+                        <div class="card form-card">
+                            <h2>Custom Dataset override</h2>
+                            <p>Force specific domains to be marked as Safe or Phishing in the dataset, overriding automatic ML predictions.</p>
+                            <form id="admin-override-form">
+                                <div class="form-group">
+                                    <label for="override-url">URL / Domain</label>
+                                    <input type="text" id="override-url" placeholder="e.g. custom-trusted-portal.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="override-label">Assigned Label</label>
+                                    <select id="override-label">
+                                        <option value="0">Safe / Legitimate (0)</option>
+                                        <option value="1">Malicious / Phishing (1)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-block">Add Dataset Override</button>
+                            </form>
+                            <div id="override-success" class="alert alert-success hidden" style="margin-top: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- User Management Table -->
+                    <div class="card table-card" style="margin-top: 20px;">
+                        <h2>Registered Security Profiles</h2>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Username</th>
+                                    <th>System Role</th>
+                                    <th>Date Registered</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- jsQR Code scan library (Loaded locally) -->
+    <script src="/static/js/jsQR.js"></script>
+    <!-- Custom Application Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
