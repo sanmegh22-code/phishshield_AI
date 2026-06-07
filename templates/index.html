@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-
+    <div id="sidebar-overlay"></div>
     <!-- ========================================== -->
     <!-- REAL-TIME INTERACTION WARNING OVERLAY      -->
     <!-- ========================================== -->
@@ -138,7 +138,7 @@
     <!-- ========================================== -->
     <div id="app-container" class="app-layout hidden">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <i class="fa-solid fa-shield-halved"></i>
                 <h2>PhishShield <span>AI</span></h2>
@@ -187,6 +187,13 @@
         <main class="main-content">
             <!-- Header Bar -->
             <header class="header-bar">
+    <button id="sidebar-toggle" class="mobile-menu-btn">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <h1 id="page-title">Security Dashboard</h1>
+
+    <div class="header-status">
                 <h1 id="page-title">Security Dashboard</h1>
                 <div class="header-status">
                     <!-- Real-Time Link Shield Switch -->

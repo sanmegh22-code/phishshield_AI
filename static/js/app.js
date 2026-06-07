@@ -1171,3 +1171,35 @@ async function loadAdminData() {
         console.error("Failed to load admin panel data:", err);
     }
 }
+
+// Mobile Sidebar
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const sidebarBtn = document.getElementById("sidebar-toggle");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+
+    if(sidebarBtn){
+
+        sidebarBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            overlay.classList.toggle("active");
+        });
+
+        overlay.addEventListener("click", () => {
+            sidebar.classList.remove("open");
+            overlay.classList.remove("active");
+        });
+
+        document.querySelectorAll(".nav-item").forEach(item=>{
+            item.addEventListener("click",()=>{
+                if(window.innerWidth <= 768){
+                    sidebar.classList.remove("open");
+                    overlay.classList.remove("active");
+                }
+            });
+        });
+    }
+
+});
